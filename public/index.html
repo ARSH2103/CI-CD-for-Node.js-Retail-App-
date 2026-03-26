@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RetailMind — Autonomous Retail Research Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@300;400;500;700;800;900&family=Instrument+Mono:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #03050a;
+      --surface: rgba(255,255,255,0.04);
+      --surface2:rgba(255,255,255,0.07);
+      --border:  rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --teal:    #00d4aa;
+      --teal2:   #00ffcc;
+      --blue:    #3b82f6;
+      --amber:   #f59e0b;
+      --text:    #f0f4f8;
+      --text2:   #8899aa;
+      --text3:   #445566;
+      --font:    'Cabinet Grotesk', sans-serif;
+      --mono:    'Instrument Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+
+    .mesh {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 10%, rgba(0,212,170,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 80% 80%, rgba(59,130,246,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(0,212,170,0.03) 0%, transparent 70%);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 0 5%; display: flex; align-items: center; justify-content: space-between;
+      height: 68px; background: rgba(3,5,10,0.7); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.03em; text-decoration: none; color: var(--text); }
+    .logo-dot { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--teal), var(--blue)); display: grid; place-items: center; font-size: 14px; }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { font-size: 0.875rem; color: var(--text2); text-decoration: none; transition: color 0.2s; font-weight: 500; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta { background: var(--teal); color: #000; border: none; padding: 9px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 700; cursor: pointer; font-family: var(--font); text-decoration: none; transition: opacity 0.2s; }
+    .nav-cta:hover { opacity: 0.85; }
+
+    section { position: relative; z-index: 1; }
+
+    /* ── HERO ── */
+    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 120px 5% 80px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.2); border-radius: 100px; padding: 6px 16px; font-size: 0.75rem; font-family: var(--mono); color: var(--teal); margin-bottom: 32px; letter-spacing: 0.05em; animation: fadeUp 0.6s ease forwards; }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s ease infinite; }
+    .hero h1 { font-size: clamp(3rem, 8vw, 6.5rem); font-weight: 900; letter-spacing: -0.05em; line-height: 0.95; margin-bottom: 28px; animation: fadeUp 0.6s 0.1s ease both; }
+    .hero h1 .grad { background: linear-gradient(135deg, var(--teal2) 0%, var(--teal) 40%, var(--blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero p { max-width: 560px; font-size: 1.1rem; color: var(--text2); line-height: 1.7; margin: 0 auto 40px; animation: fadeUp 0.6s 0.2s ease both; }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; animation: fadeUp 0.6s 0.3s ease both; }
+
+    .btn-primary { background: var(--teal); color: #000; padding: 14px 28px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; border: none; font-family: var(--font); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,170,0.25); }
+    .btn-ghost { background: var(--surface); color: var(--text); padding: 14px 28px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border2); font-family: var(--font); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; backdrop-filter: blur(10px); }
+    .btn-ghost:hover { background: var(--surface2); border-color: rgba(255,255,255,0.2); }
+
+    .stats-row { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 72px; animation: fadeUp 0.6s 0.4s ease both; }
+    .stat-item { padding: 20px 48px; text-align: center; border-right: 1px solid var(--border); }
+    .stat-item:last-child { border-right: none; }
+    .stat-num { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.04em; background: linear-gradient(135deg, var(--teal), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-label { font-size: 0.78rem; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+    /* ── PIPELINE CARD ── */
+    .pipeline-section { padding: 60px 5%; max-width: 1100px; margin: 0 auto; }
+    .pipeline-wrap { display: flex; align-items: center; gap: 64px; }
+    .pipeline-text { flex: 1; }
+    .pipeline-visual { flex: 1.2; }
+    .label-tag { font-family: var(--mono); font-size: 0.72rem; color: var(--teal); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
+    .pipeline-text h2 { font-size: 2.6rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 16px; }
+    .pipeline-text p { color: var(--text2); line-height: 1.7; font-size: 0.975rem; }
+
+    /* Glass card */
+    .glass-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 0; backdrop-filter: blur(20px); box-shadow: 0 0 0 1px rgba(0,212,170,0.08), 0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06); position: relative; overflow: hidden; }
+    .glass-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,212,170,0.5), transparent); }
+
+    .card-titlebar { display: flex; align-items: center; gap: 7px; padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.2); }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28ca41; }
+    .card-title-text { margin-left: 8px; font-size: 12px; color: rgba(255,255,255,0.35); font-family: var(--mono); }
+    .card-spinner { margin-left: auto; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.12); border-top-color: var(--blue); animation: spin 0.9s linear infinite; }
+
+    /* Pipeline steps inside card */
+    .pipe-steps { display: flex; align-items: center; justify-content: center; padding: 22px 20px 16px; gap: 0; }
+    .pipe-step { display: flex; flex-direction: column; align-items: center; gap: 7px; flex: 1; }
+    .pipe-circle { width: 52px; height: 52px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; position: relative; }
+    .pipe-circle svg { width: 22px; height: 22px; }
+    .pipe-circle .check-badge { position: absolute; bottom: -2px; right: -2px; width: 17px; height: 17px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .pipe-circle .check-badge svg { width: 9px; height: 9px; }
+    .pc-done   { background: rgba(16,110,86,0.25); border: 2px solid #1D9E75; }
+    .pc-active { background: rgba(24,95,165,0.25); border: 2px solid #3b82f6; }
+    .pc-idle   { background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.12); opacity: 0.4; }
+    .pipe-label { font-size: 11px; font-weight: 600; font-family: var(--mono); }
+    .pl-done   { color: #1D9E75; }
+    .pl-active { color: #3b82f6; }
+    .pl-idle   { color: rgba(255,255,255,0.3); }
+    .pipe-arrow { font-size: 14px; color: rgba(255,255,255,0.15); margin-bottom: 18px; flex-shrink: 0; padding: 0 2px; }
+    .pipe-arrow.done { color: #1D9E75; }
+    .pulse-ring { position: absolute; inset: -5px; border-radius: 50%; border: 2px solid #3b82f6; opacity: 0; animation: pulseRing 1.6s ease-out infinite; }
+
+    /* Progress bar */
+    .progress-wrap { margin: 0 18px 14px; height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--teal), var(--blue)); border-radius: 2px; transition: width 1.2s ease; }
+
+    /* Log terminal */
+    .card-log { margin: 0 16px 16px; background: rgba(0,0,0,0.35); border-radius: 10px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.06); min-height: 96px; }
+    .log-line { font-family: var(--mono); font-size: 11.5px; line-height: 1.8; color: rgba(255,255,255,0.3); }
+    .log-active { color: var(--teal); font-weight: 500; }
+    .log-ok { color: rgba(29,158,117,0.85); }
+    .cursor { display: inline-block; width: 7px; height: 12px; background: var(--teal); vertical-align: middle; margin-left: 2px; animation: blink 1s step-end infinite; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section { padding: 100px 5%; max-width: 1100px; margin: 0 auto; }
+    .section-label { font-family: var(--mono); font-size: 0.72rem; color: var(--teal); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; text-align: center; }
+    .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.04em; text-align: center; margin-bottom: 16px; }
+    .section-sub { color: var(--text2); text-align: center; font-size: 1rem; max-width: 480px; margin: 0 auto 64px; line-height: 1.7; }
+
+    .flow-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .flow-step { background: var(--surface); border: 1px solid var(--border); padding: 32px 28px; position: relative; transition: all 0.2s; }
+    .flow-step:first-child { border-radius: 16px 0 0 16px; }
+    .flow-step:last-child  { border-radius: 0 16px 16px 0; }
+    .flow-step:hover { background: var(--surface2); border-color: var(--border2); transform: translateY(-4px); box-shadow: 0 16px 32px rgba(0,0,0,0.3); z-index: 2; }
+    .step-num { font-size: 0.68rem; font-family: var(--mono); color: var(--teal); margin-bottom: 16px; letter-spacing: 0.08em; }
+    .step-icon { font-size: 2rem; margin-bottom: 16px; display: block; }
+    .step-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.02em; }
+    .step-desc { font-size: 0.875rem; color: var(--text2); line-height: 1.6; }
+
+    /* ── FEATURES ── */
+    .features-section { padding: 80px 5%; max-width: 1100px; margin: 0 auto; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; }
+    .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; transition: all 0.25s; position: relative; overflow: hidden; }
+    .feature-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,212,170,0.04), transparent); opacity: 0; transition: opacity 0.25s; }
+    .feature-card:hover { border-color: rgba(0,212,170,0.25); transform: translateY(-3px); }
+    .feature-card:hover::after { opacity: 1; }
+    .feat-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.2); display: grid; place-items: center; font-size: 20px; margin-bottom: 18px; }
+    .feat-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feat-desc  { font-size: 0.85rem; color: var(--text2); line-height: 1.6; }
+
+    /* ── ARCHITECTURE ── */
+    .arch-section { padding: 80px 5%; max-width: 1100px; margin: 0 auto; }
+    .arch-diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; margin-top: 48px; position: relative; overflow: hidden; }
+    .arch-diagram::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--teal), transparent); }
+
+    /* ── TECH STACK ── */
+    .tech-section { padding: 80px 5%; max-width: 1100px; margin: 0 auto; }
+    .tech-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 48px; }
+    .tech-pill { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 10px 20px; font-size: 0.875rem; font-weight: 600; transition: all 0.2s; }
+    .tech-pill:hover { background: var(--surface2); border-color: var(--border2); transform: translateY(-2px); }
+    .tech-icon { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; font-size: 14px; }
+
+    /* ── CTA ── */
+    .cta-section { padding: 120px 5%; text-align: center; position: relative; }
+    .cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 600px; height: 300px; background: radial-gradient(ellipse, rgba(0,212,170,0.08), transparent 70%); pointer-events: none; }
+    .cta-section h2 { font-size: clamp(2.2rem, 5vw, 4rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 20px; position: relative; }
+    .cta-section p { color: var(--text2); font-size: 1rem; margin-bottom: 40px; position: relative; }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 40px 5%; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .footer-copy { font-size: 0.8rem; color: var(--text3); }
+    .footer-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .footer-tag { font-size: 0.7rem; font-family: var(--mono); color: var(--text3); background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp    { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse     { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.4)} }
+    @keyframes spin      { to { transform: rotate(360deg); } }
+    @keyframes blink     { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes pulseRing { 0%{opacity:0.8;transform:scale(1)} 100%{opacity:0;transform:scale(1.5)} }
+    @keyframes logIn     { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes floatA    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    @keyframes floatB    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    @keyframes floatC    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    @media (max-width: 768px) {
+      .pipeline-wrap { flex-direction: column; gap: 40px; }
+      .flow-steps { grid-template-columns: 1fr; gap: 12px; }
+      .flow-step { border-radius: 14px !important; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+      .stat-item { padding: 16px 24px; }
+    }
+    @media (max-width: 480px) { .features-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="mesh"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="logo-dot">🛒</div>
+    RetailMind
+  </a>
+  <ul class="nav-links">
+    <li><a href="#pipeline">Pipeline</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#stack">Tech Stack</a></li>
+  </ul>
+  <a href="http://localhost:5173" class="nav-cta">Launch App →</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    CSE Final Year Project · 2026
+  </div>
+  <h1>
+    Autonomous<br />
+    <span class="grad">Retail Research</span><br />
+    Agent
+  </h1>
+  <p>Ask any retail industry question. Three AI agents search the web, extract insights, and write a professional research report — saved to a vector database for future reference.</p>
+  <div class="hero-actions">
+    <a href="http://localhost:5173" class="btn-primary">
+      Launch App
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <a href="#how" class="btn-ghost">How it works</a>
+  </div>
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-num">3</div><div class="stat-label">AI Agents</div></div>
+    <div class="stat-item"><div class="stat-num">~2min</div><div class="stat-label">Per Research</div></div>
+    <div class="stat-item"><div class="stat-num">600+</div><div class="stat-label">Words Per Report</div></div>
+    <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Knowledge Base</div></div>
+  </div>
+</section>
+
+<!-- ── LIVE PIPELINE DEMO ── -->
+<section class="pipeline-section reveal" id="pipeline">
+  <div class="pipeline-wrap">
+    <div class="pipeline-text">
+      <div class="label-tag">Live Pipeline</div>
+      <h2>Watch three agents<br />work in real time</h2>
+      <p style="margin-bottom:18px">Every step of the research process streams live to your browser via Server-Sent Events — no polling, no page refresh.</p>
+      <p>Each agent hands its output to the next automatically — Researcher feeds the Analyst, Analyst feeds the Writer. Sequential, transparent, reliable.</p>
+    </div>
+    <div class="pipeline-visual">
+      <div class="glass-card">
+        <!-- Title bar -->
+        <div class="card-titlebar">
+          <span class="dot dot-r"></span>
+          <span class="dot dot-y"></span>
+          <span class="dot dot-g"></span>
+          <span class="card-title-text">retail-research-agent — running</span>
+          <div class="card-spinner"></div>
+        </div>
+
+        <!-- Pipeline steps -->
+        <div class="pipe-steps">
+          <!-- Researcher — done -->
+          <div class="pipe-step">
+            <div class="pipe-circle pc-done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <div class="check-badge" style="background:#0F6E56;border:2px solid #03050a">
+                <svg viewBox="0 0 12 12" fill="none" stroke="#9FE1CB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>
+              </div>
+            </div>
+            <span class="pipe-label pl-done">Researcher</span>
+          </div>
+          <div class="pipe-arrow done">→</div>
+
+          <!-- Analyst — done -->
+          <div class="pipe-step">
+            <div class="pipe-circle pc-done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              <div class="check-badge" style="background:#0F6E56;border:2px solid #03050a">
+                <svg viewBox="0 0 12 12" fill="none" stroke="#9FE1CB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>
+              </div>
+            </div>
+            <span class="pipe-label pl-done">Analyst</span>
+          </div>
+          <div class="pipe-arrow done">→</div>
+
+          <!-- Writer — active -->
+          <div class="pipe-step">
+            <div class="pipe-circle pc-active" style="position:relative">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+              <div class="pulse-ring"></div>
+            </div>
+            <span class="pipe-label pl-active">Writer</span>
+          </div>
+          <div class="pipe-arrow">→</div>
+
+          <!-- ChromaDB — idle -->
+          <div class="pipe-step">
+            <div class="pipe-circle pc-idle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            </div>
+            <span class="pipe-label pl-idle">ChromaDB</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-wrap">
+          <div class="progress-fill" id="prog"></div>
+        </div>
+
+        <!-- Log -->
+        <div class="card-log" id="card-log"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="how-section reveal" id="how">
+  <div class="section-label">How it works</div>
+  <h2 class="section-title">One query. Three agents.<br />A complete report.</h2>
+  <p class="section-sub">The system handles everything automatically — from searching the web to writing and storing the final report.</p>
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="step-num">STEP 01</div>
+      <span class="step-icon">💬</span>
+      <div class="step-title">You ask a question</div>
+      <div class="step-desc">Type any retail industry question — trends, technologies, company strategies, market analysis. The system understands natural language.</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">STEP 02</div>
+      <span class="step-icon">🔍</span>
+      <div class="step-title">Agents search and analyse</div>
+      <div class="step-desc">The Researcher searches Tavily for articles. The Analyst reads everything and extracts the 5–7 most important insights with statistics and real company examples.</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">STEP 03</div>
+      <span class="step-icon">📄</span>
+      <div class="step-title">Report saved to knowledge base</div>
+      <div class="step-desc">The Writer produces a 600+ word professional report. Saved to ChromaDB as a vector embedding and as a .txt file — semantically searchable forever.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features-section reveal" id="features">
+  <div class="section-label">Features</div>
+  <h2 class="section-title">Everything you need<br />for retail research</h2>
+  <p class="section-sub">Built for depth, speed, and knowledge accumulation.</p>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feat-icon">⚡</div><div class="feat-title">Live Agent Pipeline</div><div class="feat-desc">Watch each agent work in real time via Server-Sent Events. See log lines as they happen — no page refresh needed.</div></div>
+    <div class="feature-card"><div class="feat-icon">🧠</div><div class="feat-title">Gemini-Powered Analysis</div><div class="feat-desc">Google Gemini 2.0 Flash reads search results, extracts structured insights, and writes professional reports with citations.</div></div>
+    <div class="feature-card"><div class="feat-icon">🔍</div><div class="feat-title">Semantic Search</div><div class="feat-desc">ChromaDB stores every report as a vector embedding. Find conceptually related reports even without exact keywords.</div></div>
+    <div class="feature-card"><div class="feat-icon">💾</div><div class="feat-title">Dual Knowledge Store</div><div class="feat-desc">Every report is saved twice — in ChromaDB for semantic search, and as a .txt file for human-readable backup.</div></div>
+    <div class="feature-card"><div class="feat-icon">📋</div><div class="feat-title">Structured Reports</div><div class="feat-desc">Every report follows a consistent 7-section format — Executive Summary, Key Findings, Trends, Examples, Challenges, Outlook, Sources.</div></div>
+    <div class="feature-card"><div class="feat-icon">📱</div><div class="feat-title">Research History</div><div class="feat-desc">All past sessions are saved. Revisit any previous research, read the full report, and review the agent logs.</div></div>
+  </div>
+</section>
+
+<!-- ── ARCHITECTURE DIAGRAM ── -->
+<section class="arch-section reveal" id="architecture">
+  <div class="section-label">Architecture</div>
+  <h2 class="section-title">Three clean layers</h2>
+  <p class="section-sub">UI talks to API, API runs agents, agents call external services.</p>
+  <div class="arch-diagram">
+    <svg width="100%" viewBox="0 0 680 600" style="overflow:visible">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+        <linearGradient id="ct" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0F6E56" stop-opacity="0.9"/><stop offset="100%" stop-color="#085041" stop-opacity="0.98"/></linearGradient>
+        <linearGradient id="cb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#185FA5" stop-opacity="0.9"/><stop offset="100%" stop-color="#0C447C" stop-opacity="0.98"/></linearGradient>
+        <linearGradient id="ca" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#854F0B" stop-opacity="0.9"/><stop offset="100%" stop-color="#633806" stop-opacity="0.98"/></linearGradient>
+        <filter id="fs"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.4"/></filter>
+      </defs>
+
+      <style>
+        .fa2{animation:floatA 4s ease-in-out infinite}
+        .fb2{animation:floatB 4s ease-in-out infinite .8s}
+        .fc2{animation:floatC 4s ease-in-out infinite 1.6s}
+        @keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        @keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        @keyframes floatC{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        .arch-card{cursor:pointer;transition:opacity .15s}
+        .arch-card:hover{opacity:.85}
+      </style>
+
+      <!-- Section labels -->
+      <text x="20" y="108" font-size="10" fill="#5DCAA5" font-weight="600" letter-spacing="1.5" font-family="'Instrument Mono',monospace">UI LAYER</text>
+      <text x="20" y="268" font-size="10" fill="#85B7EB" font-weight="600" letter-spacing="1.5" font-family="'Instrument Mono',monospace">PROCESSING</text>
+      <text x="20" y="468" font-size="10" fill="#EF9F27" font-weight="600" letter-spacing="1.5" font-family="'Instrument Mono',monospace">EXTERNAL</text>
+
+      <!-- Dividers -->
+      <line x1="20" y1="116" x2="660" y2="116" stroke="#5DCAA5" stroke-width="0.5" opacity="0.2"/>
+      <line x1="20" y1="278" x2="660" y2="278" stroke="#85B7EB" stroke-width="0.5" opacity="0.2"/>
+      <line x1="20" y1="478" x2="660" y2="478" stroke="#EF9F27" stroke-width="0.5" opacity="0.2"/>
+
+      <!-- ROW 1: UI (5 cards, teal) -->
+      <g class="fa2">
+        <g class="arch-card"><rect x="30" y="128" width="108" height="66" rx="10" fill="url(#ct)" stroke="#5DCAA5" stroke-width="0.8" filter="url(#fs)"/><rect x="30" y="128" width="108" height="4" rx="2" fill="#5DCAA5" opacity="0.8"/><text x="84" y="153" text-anchor="middle" font-size="11" font-weight="600" fill="#9FE1CB" font-family="'Cabinet Grotesk',sans-serif">Research</text><text x="84" y="168" text-anchor="middle" font-size="10" fill="#5DCAA5" font-family="'Instrument Mono',monospace">Query + SSE</text></g>
+        <g class="arch-card"><rect x="152" y="128" width="108" height="66" rx="10" fill="url(#ct)" stroke="#5DCAA5" stroke-width="0.8" filter="url(#fs)"/><rect x="152" y="128" width="108" height="4" rx="2" fill="#5DCAA5" opacity="0.8"/><text x="206" y="153" text-anchor="middle" font-size="11" font-weight="600" fill="#9FE1CB" font-family="'Cabinet Grotesk',sans-serif">Pipeline</text><text x="206" y="168" text-anchor="middle" font-size="10" fill="#5DCAA5" font-family="'Instrument Mono',monospace">Live visualiser</text></g>
+        <g class="arch-card"><rect x="274" y="128" width="108" height="66" rx="10" fill="url(#ct)" stroke="#5DCAA5" stroke-width="0.8" filter="url(#fs)"/><rect x="274" y="128" width="108" height="4" rx="2" fill="#5DCAA5" opacity="0.8"/><text x="328" y="153" text-anchor="middle" font-size="11" font-weight="600" fill="#9FE1CB" font-family="'Cabinet Grotesk',sans-serif">Report Viewer</text><text x="328" y="168" text-anchor="middle" font-size="10" fill="#5DCAA5" font-family="'Instrument Mono',monospace">Markdown</text></g>
+        <g class="arch-card"><rect x="396" y="128" width="108" height="66" rx="10" fill="url(#ct)" stroke="#5DCAA5" stroke-width="0.8" filter="url(#fs)"/><rect x="396" y="128" width="108" height="4" rx="2" fill="#5DCAA5" opacity="0.8"/><text x="450" y="153" text-anchor="middle" font-size="11" font-weight="600" fill="#9FE1CB" font-family="'Cabinet Grotesk',sans-serif">Knowledge</text><text x="450" y="168" text-anchor="middle" font-size="10" fill="#5DCAA5" font-family="'Instrument Mono',monospace">Semantic search</text></g>
+        <g class="arch-card"><rect x="518" y="128" width="108" height="66" rx="10" fill="url(#ct)" stroke="#5DCAA5" stroke-width="0.8" filter="url(#fs)"/><rect x="518" y="128" width="108" height="4" rx="2" fill="#5DCAA5" opacity="0.8"/><text x="572" y="153" text-anchor="middle" font-size="11" font-weight="600" fill="#9FE1CB" font-family="'Cabinet Grotesk',sans-serif">History</text><text x="572" y="168" text-anchor="middle" font-size="10" fill="#5DCAA5" font-family="'Instrument Mono',monospace">Past sessions</text></g>
+      </g>
+
+      <!-- Down connectors UI → Proc -->
+      <line x1="84" y1="194" x2="84" y2="288" stroke="#5DCAA5" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" marker-end="url(#arrow)"/>
+      <line x1="206" y1="194" x2="206" y2="288" stroke="#5DCAA5" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" marker-end="url(#arrow)"/>
+      <line x1="328" y1="194" x2="328" y2="288" stroke="#5DCAA5" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" marker-end="url(#arrow)"/>
+      <line x1="450" y1="194" x2="450" y2="288" stroke="#5DCAA5" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" marker-end="url(#arrow)"/>
+      <line x1="572" y1="194" x2="572" y2="288" stroke="#5DCAA5" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" marker-end="url(#arrow)"/>
+
+      <!-- ROW 2: Processing (4 cards, blue) -->
+      <g class="fb2">
+        <g class="arch-card"><rect x="52" y="296" width="128" height="66" rx="10" fill="url(#cb)" stroke="#85B7EB" stroke-width="0.8" filter="url(#fs)"/><rect x="52" y="296" width="128" height="4" rx="2" fill="#85B7EB" opacity="0.8"/><text x="116" y="321" text-anchor="middle" font-size="11" font-weight="600" fill="#B5D4F4" font-family="'Cabinet Grotesk',sans-serif">API Gateway</text><text x="116" y="336" text-anchor="middle" font-size="10" fill="#85B7EB" font-family="'Instrument Mono',monospace">FastAPI · SSE</text></g>
+        <g class="arch-card"><rect x="202" y="296" width="138" height="66" rx="10" fill="url(#cb)" stroke="#85B7EB" stroke-width="0.8" filter="url(#fs)"/><rect x="202" y="296" width="138" height="4" rx="2" fill="#85B7EB" opacity="0.8"/><text x="271" y="321" text-anchor="middle" font-size="11" font-weight="600" fill="#B5D4F4" font-family="'Cabinet Grotesk',sans-serif">Orchestrator</text><text x="271" y="336" text-anchor="middle" font-size="10" fill="#85B7EB" font-family="'Instrument Mono',monospace">Session · Stream</text></g>
+        <g class="arch-card"><rect x="362" y="296" width="138" height="66" rx="10" fill="url(#cb)" stroke="#85B7EB" stroke-width="0.8" filter="url(#fs)"/><rect x="362" y="296" width="138" height="4" rx="2" fill="#85B7EB" opacity="0.8"/><text x="431" y="321" text-anchor="middle" font-size="11" font-weight="600" fill="#B5D4F4" font-family="'Cabinet Grotesk',sans-serif">CrewAI Pipeline</text><text x="431" y="336" text-anchor="middle" font-size="10" fill="#85B7EB" font-family="'Instrument Mono',monospace">3 agents</text></g>
+        <g class="arch-card"><rect x="522" y="296" width="116" height="66" rx="10" fill="url(#cb)" stroke="#85B7EB" stroke-width="0.8" filter="url(#fs)"/><rect x="522" y="296" width="116" height="4" rx="2" fill="#85B7EB" opacity="0.8"/><text x="580" y="321" text-anchor="middle" font-size="11" font-weight="600" fill="#B5D4F4" font-family="'Cabinet Grotesk',sans-serif">KB Repository</text><text x="580" y="336" text-anchor="middle" font-size="10" fill="#85B7EB" font-family="'Instrument Mono',monospace">Dual-write</text></g>
+      </g>
+
+      <!-- Horizontal arrows Proc -->
+      <line x1="180" y1="329" x2="202" y2="329" stroke="#85B7EB" stroke-width="1" marker-end="url(#arrow)" opacity="0.6"/>
+      <line x1="340" y1="329" x2="362" y2="329" stroke="#85B7EB" stroke-width="1" marker-end="url(#arrow)" opacity="0.6"/>
+      <line x1="500" y1="329" x2="522" y2="329" stroke="#85B7EB" stroke-width="1" marker-end="url(#arrow)" opacity="0.6"/>
+
+      <!-- Down connectors Proc → Ext -->
+      <line x1="271" y1="362" x2="271" y2="488" stroke="#85B7EB" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" marker-end="url(#arrow)"/>
+      <line x1="431" y1="362" x2="431" y2="488" stroke="#85B7EB" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" marker-end="url(#arrow)"/>
+      <line x1="580" y1="362" x2="580" y2="488" stroke="#85B7EB" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" marker-end="url(#arrow)"/>
+
+      <!-- ROW 3: External (4 cards, amber) -->
+      <g class="fc2">
+        <g class="arch-card"><rect x="40" y="492" width="136" height="66" rx="10" fill="url(#ca)" stroke="#EF9F27" stroke-width="0.8" filter="url(#fs)"/><rect x="40" y="492" width="136" height="4" rx="2" fill="#EF9F27" opacity="0.9"/><text x="108" y="517" text-anchor="middle" font-size="11" font-weight="600" fill="#FAC775" font-family="'Cabinet Grotesk',sans-serif">Gemini 2.0</text><text x="108" y="532" text-anchor="middle" font-size="10" fill="#EF9F27" font-family="'Instrument Mono',monospace">Language model</text></g>
+        <g class="arch-card"><rect x="200" y="492" width="136" height="66" rx="10" fill="url(#ca)" stroke="#EF9F27" stroke-width="0.8" filter="url(#fs)"/><rect x="200" y="492" width="136" height="4" rx="2" fill="#EF9F27" opacity="0.9"/><text x="268" y="517" text-anchor="middle" font-size="11" font-weight="600" fill="#FAC775" font-family="'Cabinet Grotesk',sans-serif">Tavily Search</text><text x="268" y="532" text-anchor="middle" font-size="10" fill="#EF9F27" font-family="'Instrument Mono',monospace">Web search API</text></g>
+        <g class="arch-card"><rect x="360" y="492" width="136" height="66" rx="10" fill="url(#ca)" stroke="#EF9F27" stroke-width="0.8" filter="url(#fs)"/><rect x="360" y="492" width="136" height="4" rx="2" fill="#EF9F27" opacity="0.9"/><text x="428" y="517" text-anchor="middle" font-size="11" font-weight="600" fill="#FAC775" font-family="'Cabinet Grotesk',sans-serif">ChromaDB</text><text x="428" y="532" text-anchor="middle" font-size="10" fill="#EF9F27" font-family="'Instrument Mono',monospace">Vector store</text></g>
+        <g class="arch-card"><rect x="520" y="492" width="120" height="66" rx="10" fill="url(#ca)" stroke="#EF9F27" stroke-width="0.8" filter="url(#fs)"/><rect x="520" y="492" width="120" height="4" rx="2" fill="#EF9F27" opacity="0.9"/><text x="580" y="517" text-anchor="middle" font-size="11" font-weight="600" fill="#FAC775" font-family="'Cabinet Grotesk',sans-serif">File System</text><text x="580" y="532" text-anchor="middle" font-size="10" fill="#EF9F27" font-family="'Instrument Mono',monospace">.txt backup</text></g>
+      </g>
+
+      <!-- Legend -->
+      <rect x="30" y="578" width="10" height="10" rx="2" fill="#5DCAA5" opacity="0.7"/>
+      <text x="46" y="588" font-size="10" fill="#5DCAA5" font-family="'Instrument Mono',monospace">UI Layer</text>
+      <rect x="130" y="578" width="10" height="10" rx="2" fill="#85B7EB" opacity="0.7"/>
+      <text x="146" y="588" font-size="10" fill="#85B7EB" font-family="'Instrument Mono',monospace">Processing</text>
+      <rect x="250" y="578" width="10" height="10" rx="2" fill="#EF9F27" opacity="0.7"/>
+      <text x="266" y="588" font-size="10" fill="#EF9F27" font-family="'Instrument Mono',monospace">External services</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ── TECH STACK ── -->
+<section class="tech-section reveal" id="stack">
+  <div class="section-label">Tech Stack</div>
+  <h2 class="section-title">Built with the right tools</h2>
+  <p class="section-sub">Every technology chosen for a specific reason — not just familiarity.</p>
+  <div class="tech-grid">
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(0,212,170,0.1)">🤖</div>Google Gemini 2.0</div>
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(59,130,246,0.1)">🔗</div>LangChain</div>
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(245,158,11,0.1)">👥</div>CrewAI</div>
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(0,212,170,0.1)">🔍</div>Tavily Search</div>
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(139,92,246,0.1)">🗄️</div>ChromaDB</div>
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(59,130,246,0.1)">⚡</div>FastAPI</div>
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(0,212,170,0.1)">⚛️</div>React + Vite</div>
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(245,158,11,0.1)">📡</div>Server-Sent Events</div>
+    <div class="tech-pill"><div class="tech-icon" style="background:rgba(139,92,246,0.1)">🐍</div>Python 3.11</div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section reveal">
+  <div class="cta-glow"></div>
+  <h2>Ready to research?</h2>
+  <p>Start your first retail industry research session in seconds.</p>
+  <a href="http://localhost:5173" class="btn-primary" style="font-size:1.05rem;padding:16px 36px">
+    Launch RetailMind
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </a>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="logo-dot" style="width:26px;height:26px;font-size:12px">🛒</div>
+    <span class="footer-copy">RetailMind · CSE Final Year Project 2025</span>
+  </div>
+  <div class="footer-tags">
+    <span class="footer-tag">Generative AI</span>
+    <span class="footer-tag">LLM Agents</span>
+    <span class="footer-tag">Multi-Agent Systems</span>
+    <span class="footer-tag">ChromaDB</span>
+    <span class="footer-tag">FastAPI</span>
+    <span class="footer-tag">React</span>
+  </div>
+</footer>
+
+<script>
+  // ── Scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  // ── Smooth nav scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // ── Pipeline card log animation
+  const logs = [
+    { cls: '',           text: '[22:14:01]  Research Agent activated' },
+    { cls: 'log-ok',     text: '[22:14:04]  Tavily search → 5 results found' },
+    { cls: 'log-ok',     text: '[22:14:08]  Analyst extracted 6 key insights' },
+    { cls: 'log-active', text: '[22:14:11]  Writer drafting report', cursor: true },
+  ];
+
+  const logEl = document.getElementById('card-log');
+  const progEl = document.getElementById('prog');
+  let shown = 0;
+
+  function showLog() {
+    if (shown >= logs.length) return;
+    const l = logs[shown];
+    const div = document.createElement('div');
+    div.className = 'log-line ' + (l.cls || '');
+    div.style.animation = 'logIn 0.3s ease forwards';
+    div.innerHTML = l.text + (l.cursor ? '<span class="cursor"></span>' : '');
+    logEl.appendChild(div);
+    shown++;
+    progEl.style.width = (shown / logs.length * 80) + '%';
+    if (shown < logs.length) setTimeout(showLog, 1500);
+  }
+
+  setTimeout(showLog, 800);
+</script>
+</body>
+</html>
